@@ -3,6 +3,7 @@
 
 #include "pe_parser.hpp"
 #include "utils.hpp"
+
 #include <iostream>
 #include <fstream>
 #include <filesystem>
@@ -15,36 +16,70 @@ int main(int argc, char* argv[]) {
 
     std::string filepath = argv[1];
 
-    // Ensure outputs directory exists
-    std::filesystem::create_directories("outputs");
-
-    // Get base filename (without extension) for output file
-    std::filesystem::path sample_path(filepath);
-    std::string base_name = sample_path.stem().string();
-    std::string output_file = "outputs/" + base_name + "_artifacts.txt";
-
-    std::ofstream output(output_file);
-    if (!output) {
-        std::cerr << "Failed to open output file: " << output_file << "\n";
+    // Check if input file exists
+    if (!std::filesystem::exists(filepath)) {
+        std::cerr << "Error: File not found → " << filepath << "\n";
         return 1;
     }
 
-    output << "== IMPORTS ==\n";
-    for (const auto& imp : extractImports(filepath)) {
-        output << imp.dll << " : " << imp.function << "\n";
+    // Ensure outputs directory exists
+    std::filesystem::create_directories("outputs");
+
+    // Extract base name for output files
+    std::filesystem::path sample_path(filepath);
+    std::string base_name = sample_path.stem().string();
+    std::string output_txt = "outputs/" + base_name + "_artifacts.txt";
+    std::string output_json = "outputs/" + base_name + "_artifacts.json";
+
+    // Open TXT output
+    std::ofstream out(output_txt);
+    if (!out) {
+        std::cerr << "Failed to open output file: " << output_txt << "\n";
+        return 1;
     }
 
-    output << "\n== SECTIONS ==\n";
-    for (const auto& sec : extractSections(filepath)) {
-        output << sec.name << " | VSize: " << sec.virtualSize
-               << " | RawSize: " << sec.rawSize << "\n";
+    // ==== IMPORTS ====
+    auto imports = extractImports(filepath);
+    WriteToFile(out, "== IMPORTS ==");
+    if (imports.empty()) {
+        WriteToFile(out, "[No imports found]");
+    } else {
+        for (const auto& imp : imports) {
+            WriteToFile(out, imp.dll + " : " + imp.function);
+        }
     }
 
-    output << "\n== STRINGS ==\n";
-    for (const auto& str : extractAsciiStrings(filepath)) {
-        output << str << "\n";
+    // ==== SECTIONS ====
+    auto sections = extractSections(filepath);
+    WriteToFile(out, "\n== SECTIONS ==");
+    if (sections.empty()) {
+        WriteToFile(out, "[No sections found]");
+    } else {
+        for (const auto& sec : sections) {
+            std::string secName = sec.name.empty() ? "[Unnamed]" : sec.name;
+            WriteToFile(out, secName + " | VSize: " +
+                std::to_string(sec.virtualSize) + " | RawSize: " +
+                std::to_string(sec.rawSize));
+        }
     }
 
-    output.close();
-    std::cout << "Artifacts saved to " << output_file << "\n";
+    // ==== STRINGS ====
+    WriteToFile(out, "\n== STRINGS ==");
+    auto rawStrings = extractAsciiStrings(filepath, 4);
+    auto filteredStrings = filterHighEntropyStrings(rawStrings, 4.5);
+    if (filteredStrings.empty()) {
+        WriteToFile(out, "[No printable strings or all filtered]");
+    } else {
+        for (const auto& str : filteredStrings) {
+            WriteToFile(out, str);
+        }
+    }
+
+    out.close();
+
+    // ==== JSON OUTPUT ====
+    writeJsonOutput(output_json, imports, sections, filteredStrings);
+    std::cout << "Artifacts extracted to: " << output_txt << " and " << output_json << "\n";
+
+    return 0;
 }

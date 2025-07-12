@@ -5,6 +5,7 @@
 #include "utils.hpp"
 #include <iostream>
 #include <fstream>
+#include <filesystem>
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
@@ -13,7 +14,20 @@ int main(int argc, char* argv[]) {
     }
 
     std::string filepath = argv[1];
-    std::ofstream output("outputs/artifacts.txt");
+
+    // Ensure outputs directory exists
+    std::filesystem::create_directories("outputs");
+
+    // Get base filename (without extension) for output file
+    std::filesystem::path sample_path(filepath);
+    std::string base_name = sample_path.stem().string();
+    std::string output_file = "outputs/" + base_name + "_artifacts.txt";
+
+    std::ofstream output(output_file);
+    if (!output) {
+        std::cerr << "Failed to open output file: " << output_file << "\n";
+        return 1;
+    }
 
     output << "== IMPORTS ==\n";
     for (const auto& imp : extractImports(filepath)) {
@@ -32,6 +46,5 @@ int main(int argc, char* argv[]) {
     }
 
     output.close();
-    std::cout << "Artifacts saved to outputs/artifacts.txt\n";
-    return 0;
+    std::cout << "Artifacts saved to " << output_file << "\n";
 }

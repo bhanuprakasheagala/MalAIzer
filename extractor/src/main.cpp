@@ -78,7 +78,8 @@ int main(int argc, char* argv[]) {
     out.close();
 
     // ==== JSON OUTPUT ====
-    writeJsonOutput(output_json, imports, sections, filteredStrings);
+    FileInfo info = extractFileInfo(filepath);
+    writeJsonOutput(output_json, info, imports, sections, filteredStrings);
     std::cout << "Artifacts extracted to: " << output_txt << " and " << output_json << "\n";
 
     return 0;

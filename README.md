@@ -1,6 +1,6 @@
 # MalAIzer: GenAI-Powered Malware Artifact Analyzer
 
-<img width="1024" height="1024" alt="image" src="https://github.com/user-attachments/assets/62e71f6b-7733-40c7-96f1-8b3939c44308" />
+<img width="1984" height="986" alt="image" src="https://github.com/user-attachments/assets/c760caf6-039c-4bf9-aaad-68550826bd1e" />
 
 
 ---

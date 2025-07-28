@@ -26,7 +26,7 @@ echo "[+] Building extractor..."
 ./build_cpp.sh
 
 # --- Step 2: Extract artifacts ---
-OUTPUT_DIR="extractor/build/outputs"
+OUTPUT_DIR="outputs"
 mkdir -p "$OUTPUT_DIR"
 
 echo "[+] Extracting PE artifacts from: $PE_FILE"
